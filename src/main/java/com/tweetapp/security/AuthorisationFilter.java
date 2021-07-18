@@ -16,16 +16,15 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
-
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.SignatureException;
 
 public class AuthorisationFilter extends BasicAuthenticationFilter {
-	
-	private static final Logger logger = LoggerFactory.getLogger(AuthorisationFilter.class);
-	
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(AuthorisationFilter.class);
+
 	Environment env;
 
 	public AuthorisationFilter(AuthenticationManager authenticationManager, Environment env) {
@@ -43,49 +42,40 @@ public class AuthorisationFilter extends BasicAuthenticationFilter {
 			chain.doFilter(req, res);
 			return;
 		}
-		
-		try{
-		UsernamePasswordAuthenticationToken authentication = getAuthentication(req);
-		SecurityContextHolder.getContext().setAuthentication(authentication);
-		chain.doFilter(req, res);
-		}
-		catch(ExpiredJwtException e){
-			logger.error("Error!! Jwt token is expired " + e);
-			res.setStatus(HttpServletResponse.SC_UNAUTHORIZED); 
-			return;
-		}
-		catch(SignatureException e){
-			logger.error("Error!! Jwt Signature exception "+ e);
+
+		try {
+			UsernamePasswordAuthenticationToken authentication = getAuthentication(req);
+			SecurityContextHolder.getContext().setAuthentication(authentication);
+			chain.doFilter(req, res);
+		} catch (ExpiredJwtException e) {
+			LOGGER.error("Error!! Jwt token is expired " + e);
 			res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 			return;
-		}
-		catch(MalformedJwtException e){
-			logger.error("Error!!  Jwt Signature exception " + e);
+		} catch (SignatureException e) {
+			LOGGER.error("Error!! Jwt Signature exception " + e);
 			res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 			return;
-			
+		} catch (MalformedJwtException e) {
+			LOGGER.error("Error!!  Jwt Signature exception " + e);
+			res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+			return;
+
 		}
-		
+
 	}
 
 	private UsernamePasswordAuthenticationToken getAuthentication(HttpServletRequest req) {
 		String authorizationHeader = req.getHeader(env.getProperty("authorization.token.header.name"));
 
-		if (authorizationHeader == null) {
-			return null;
+		String userId = "";
+		if (authorizationHeader != null) {
+			String token = authorizationHeader.replace(env.getProperty("authorization.token.header.prefix"), "");
+			userId = Jwts.parser().setSigningKey(env.getProperty("token.secret")).parseClaimsJws(token).getBody()
+					.getSubject();
 		}
 
-		String token = authorizationHeader.replace(env.getProperty("authorization.token.header.prefix"), "");
-	
-
-			String userId = Jwts.parser().setSigningKey(env.getProperty("token.secret")).parseClaimsJws(token).getBody()
-					.getSubject();
-
-			if (userId == null) {
-				return null;
-			}
-
-		return new UsernamePasswordAuthenticationToken(userId, null, new ArrayList<>());
+		return (userId == null || userId == "") ? null
+				: new UsernamePasswordAuthenticationToken(userId, null, new ArrayList<>());
 
 	}
 

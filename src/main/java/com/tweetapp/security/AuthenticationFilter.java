@@ -8,6 +8,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -27,6 +29,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
 
 
 public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter{
+	private static final Logger LOGGER = LoggerFactory.getLogger(AuthenticationFilter.class);
 
 	private UserService usersService;
 	private Environment environment;
@@ -56,8 +59,9 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter{
             );
             
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            LOGGER.error("IO Exception in login");
         }
+        return null;
     }
     
     @Override

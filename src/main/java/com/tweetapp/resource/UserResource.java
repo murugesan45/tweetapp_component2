@@ -24,7 +24,7 @@ import com.tweetapp.service.UserService;
 @CrossOrigin("*")
 public class UserResource {
 
-	private static final Logger logger = LoggerFactory.getLogger(UserResource.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(UserResource.class);
 
 	@Autowired
 	UserService userService;
@@ -32,7 +32,7 @@ public class UserResource {
 	@GetMapping("/api/v1.0/tweets/{username}/forgot")
 	public ResponseEntity<?> forgotPassword(@PathVariable String username, @RequestBody Users user) throws Exception {
 
-		logger.info(username + "used forgotpassword method" + " password changed successfully");
+		LOGGER.info(username + "used forgotpassword method" + " password changed successfully");
 		userService.forgotUserPassword(username, user);
 		return new ResponseEntity<>(HttpStatus.OK);
 
@@ -41,14 +41,14 @@ public class UserResource {
 	@PostMapping("/api/v1.0/tweets/register")
 	public ResponseEntity<?> newUserRegistration(@Valid @RequestBody UsersDTO user) {
 		userService.userRegistration(user);
-		logger.info(user.getEmail() + " User Registrartion success");
+		LOGGER.info(user.getEmail() + " User Registrartion success");
 		return new ResponseEntity<>(HttpStatus.OK);
 	}
 
 	@GetMapping("/api/v1.0/tweets/users/all")
 	public ResponseEntity<List<UsersDTO>> getAllUsers() {
 
-		logger.info("Get all users invoked successfully");
+		LOGGER.info("Get all users invoked successfully");
 		return new ResponseEntity<>(userService.getAllUsers(), HttpStatus.OK);
 
 	}
@@ -57,7 +57,7 @@ public class UserResource {
 	public ResponseEntity<?> searchUserByUserName(@PathVariable String username) {
 
 		List<UsersDTO> user = userService.searchUserByUserName(username);
-		logger.info(username + " Found");
+		LOGGER.info(username + " Found");
 		return new ResponseEntity<>(user, HttpStatus.OK);
 
 	}
