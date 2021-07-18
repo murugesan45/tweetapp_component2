@@ -1,0 +1,94 @@
+version: '3.7'
+services:
+
+  zookeeper:
+    image: wurstmeister/zookeeper
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    #restart: always
+    networks:
+      - tweetapp-network
+  
+  kafka:
+    image: wurstmeister/kafka
+    container_name: kafka
+    #restart: always
+    ports: 
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: kafka
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_CREATE_TOPICS: "tweetapp-logs:1:1, Tweets:1:1"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - tweetapp-network
+  
+  mongodb:
+    image: mongo
+    container_name: mongodb
+   # restart: always
+    ports:
+      - "27017:27017"
+#    volumes:
+#      - mongodb-volume:/data/db
+    networks:
+      - tweetapp-network
+  
+  springboot:
+    image: fse/tweetapp:dockerfile1
+    #restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mongodb
+      - kafka
+      - elasticsearch
+      - logstash
+      - kibana
+    networks:
+      - tweetapp-network
+  
+  logstash:
+    image: logstash:7.7.0
+    container_name: logstash 
+    hostname: logstash
+    ports:
+      - "9600:9600"
+    volumes:
+      - .\logstash:/usr/share/logstash/pipeline/
+    links:
+      - elasticsearch:elasticsearch
+    depends_on:
+      - elasticsearch
+    networks:
+      - tweetapp-network
+  
+  elasticsearch:
+    image: elasticsearch:7.7.0
+    container_name: elasticsearch
+    hostname: elasticsearch
+    ports:
+      - "9200:9200"
+    networks:
+      - tweetapp-network
+      
+  kibana:
+    image: kibana:7.7.0
+    container_name: kibana
+    hostname: kibana
+    ports:
+      - "5601:5601"
+    links:
+      - elasticsearch:elasticsearch
+    depends_on:
+      - elasticsearch
+    networks:
+      - tweetapp-network
+     
+# Networks to be created to facilitate communication between containers
+networks:
+  tweetapp-network:
