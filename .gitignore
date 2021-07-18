@@ -15,6 +15,7 @@ target/
 .mvn
 HELP.md
 mvnw.*
+mvnw
 reports
 
 ### IntelliJ IDEA ###
